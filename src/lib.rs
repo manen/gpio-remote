@@ -1,7 +1,11 @@
+#[cfg(feature = "native")]
+pub mod native;
 #[cfg(feature = "receive")]
 pub mod receive;
 #[cfg(feature = "send")]
 pub mod send;
+
+use std::io;
 
 use thiserror::Error;
 
@@ -9,6 +13,10 @@ use thiserror::Error;
 pub enum Error {
 	#[error("gpio error")]
 	GPIO(),
+	#[error("gpio id out of bounds")]
+	IDOutOfBounds(),
+	#[error("io error")]
+	IO(io::Error),
 }
 pub type Result<T> = std::result::Result<T, Error>;
 
@@ -70,4 +78,10 @@ impl<T: gpio::GpioOut> GpioOut for T {
 	}
 }
 
-pub trait Interface {}
+pub trait Interface {
+	type In: GpioIn;
+	type Out: GpioOut;
+
+	fn open_in(id: u16) -> crate::Result<Self::In>;
+	fn open_out(id: u16) -> crate::Result<Self::Out>;
+}
