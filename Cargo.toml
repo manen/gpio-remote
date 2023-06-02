@@ -1,0 +1,13 @@
+[package]
+name = "gpio-remote"
+version = "0.1.0"
+edition = "2021"
+
+[features]
+default = ["send", "receive"]
+send = []
+receive = []
+
+[dependencies]
+gpio = "0.4.1"
+thiserror = "1.0.40"
