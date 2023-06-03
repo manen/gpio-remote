@@ -4,12 +4,12 @@ impl crate::Interface for Native {
 	type In = NativeIn;
 	type Out = NativeOut;
 
-	fn open_in(id: u16) -> crate::Result<Self::In> {
+	fn open_in(&mut self, id: u16) -> crate::Result<Self::In> {
 		gpio::sysfs::SysFsGpioInput::open(id)
 			.map(|native| NativeIn { native })
 			.map_err(|err| crate::Error::IO(err))
 	}
-	fn open_out(id: u16) -> crate::Result<Self::Out> {
+	fn open_out(&mut self, id: u16) -> crate::Result<Self::Out> {
 		gpio::sysfs::SysFsGpioOutput::open(id)
 			.map(|native| NativeOut { native })
 			.map_err(|err| crate::Error::IO(err))

@@ -1,5 +1,7 @@
 #[cfg(feature = "native")]
 pub mod native;
+#[cfg(feature = "protocol")]
+pub mod protocol;
 #[cfg(feature = "receive")]
 pub mod receive;
 #[cfg(feature = "send")]
@@ -16,7 +18,9 @@ pub enum Error {
 	#[error("gpio id out of bounds")]
 	IDOutOfBounds(),
 	#[error("io error")]
-	IO(io::Error),
+	IO(#[from] io::Error),
+	#[error("protocol error")]
+	Protocol(),
 }
 pub type Result<T> = std::result::Result<T, Error>;
 
@@ -38,6 +42,14 @@ impl From<bool> for GpioValue {
 		match value {
 			false => GpioValue::Low,
 			true => GpioValue::High,
+		}
+	}
+}
+impl From<GpioValue> for bool {
+	fn from(value: GpioValue) -> Self {
+		match value {
+			GpioValue::Low => false,
+			GpioValue::High => true,
 		}
 	}
 }
@@ -82,6 +94,6 @@ pub trait Interface {
 	type In: GpioIn;
 	type Out: GpioOut;
 
-	fn open_in(id: u16) -> crate::Result<Self::In>;
-	fn open_out(id: u16) -> crate::Result<Self::Out>;
+	fn open_in(&mut self, id: u16) -> crate::Result<Self::In>;
+	fn open_out(&mut self, id: u16) -> crate::Result<Self::Out>;
 }
