@@ -21,6 +21,8 @@ pub enum Error {
 	IO(#[from] io::Error),
 	#[error("protocol error")]
 	Protocol(),
+	#[error("msgpack encode error")]
+	RMPEncode(#[from] rmp_serde::encode::Error),
 }
 pub type Result<T> = std::result::Result<T, Error>;
 

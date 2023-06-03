@@ -1,7 +1,7 @@
 use std::io;
 
-use rmp_serde::Deserializer;
-use serde::Deserialize;
+use rmp_serde::{Deserializer, Serializer};
+use serde::{Deserialize, Serialize};
 
 use crate::{protocol, GpioIn, GpioOut};
 
@@ -40,19 +40,15 @@ trait IntoReceiver: Sized + crate::Interface {
 }
 impl<T: crate::Interface> IntoReceiver for T {
 	fn into_receiver(self) -> Receiver<Self> {
-		Receiver::new(self)
-	}
-}
-impl<I: crate::Interface> Receiver<I> {
-	pub fn new(i: I) -> Self {
 		Receiver {
 			buf_in: Default::default(),
 			buf_out: Default::default(),
 			resp_buf: vec![],
-			i,
+			i: self,
 		}
 	}
-
+}
+impl<I: crate::Interface> Receiver<I> {
 	pub fn execute<R: io::Read>(&mut self, mut r: R) -> crate::Result<()> {
 		let mut len_bytes = [0x00; 2];
 		r.read_exact(&mut len_bytes)?;
@@ -103,6 +99,21 @@ impl<I: crate::Interface> Receiver<I> {
 			}
 		}
 
+		Ok(())
+	}
+	pub fn execute_write<W: io::Write>(&mut self, mut w: W) -> crate::Result<()> {
+		for resp in &self.resp_buf {
+			let mut buf = vec![];
+			resp.serialize(&mut Serializer::new(&mut buf))?;
+
+			let len = buf.len() as u16;
+			let len_bytes = u16::to_le_bytes(len);
+
+			w.write_all(&len_bytes)?;
+			w.write_all(&buf)?;
+		}
+
+		self.resp_buf = vec![];
 		Ok(())
 	}
 }
