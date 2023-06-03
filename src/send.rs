@@ -87,6 +87,6 @@ impl<W: io::Write> Sender<W> {
 		r.read_exact(&mut buf)?;
 
 		let mut de = Deserializer::new(&buf[..]);
-		Deserialize::deserialize(&mut de).map_err(|_| crate::Error::Protocol())?
+		Ok(Deserialize::deserialize(&mut de).map_err(|_| crate::Error::Protocol())?)
 	}
 }
